@@ -22,38 +22,39 @@ definition(
     author: "primalmotion",
     description: "Turn on lights when dark, deal with night path, and more",
     category: "Convenience",
-    iconUrl: "http://icons.iconarchive.com/icons/graphicloads/android-settings/128/light-icon.png",
-    iconX2Url: "http://icons.iconarchive.com/icons/graphicloads/android-settings/128/light-icon.png"
+    iconUrl: "http://icons.iconarchive.com/icons/graphicloads/medical-health/96/eye-icon.png",
+    iconX2Url: "http://icons.iconarchive.com/icons/graphicloads/medical-health/96/eye-icon.png"
 )
 
 preferences
 {
     section ("Sensors")
     {
-        input "lightsensordevice", "capability.illuminanceMeasurement", title: "Select the light sensor to control", required: true
-        input "motionsensordevice", "capability.motionSensor", title: "Select the motion sensor to control", required: true
+        input "_lightsensordevice", "capability.illuminanceMeasurement", title: "Select the light sensor to control", required: true
+        input "_motionsensordevice", "capability.motionSensor", title: "Select the motion sensor to control", required: true
     }
 
     section ("Night Light")
     {
-        input "nightlightingenabled", "boolean", title: "Enable Night Light", required: true
-        input "nightlights", "capability.switch", title: "On illuminance, turn these lights on", multiple: true, required: false
-        input "luminancetrigger", "number", title: "If luminance is below: (300 default)", required: false
-        input "homemode", "mode", title: "When home is in mode", required: false
+        input "_nightlightsenabled", "boolean", title: "Enable Night Light", required: true
+        input "_homemode", "mode", title: "When home is in mode", required: false
+        input "_nightlights", "capability.switch", title: "Turn these lights on", multiple: true, required: false
+        input "_luminancetrigger", "number", title: "When luminance is below: (default: 300lux)", required: false
+        input "_nightlighttime", "number", title: "Turn them off after no motion for (default: 600s)", required: false
     }
 
     section ("Night Path")
     {
-        input "nightpathenabled", "boolean", title: "Enable Night Path", required: true
-        input "pathligths", "capability.switch", title: "On motion, turn these lights on", multiple: true, required: false
-        input "pathtime", "number", title: "For that amount of seconds", required: false
-        input "nightmode", "mode", title: "When home is in mode", required: false
+        input "_nightpathenabled", "boolean", title: "Enable Night Path", required: true
+        input "_nightmode", "mode", title: "When home is in mode", required: false
+        input "_pathligths", "capability.switch", title: "On motion, turn these lights on", multiple: true, required: false
+        input "_pathtime", "number", title: "Turn them off after (default: 60s)", required: false
     }
 
     section ("Night Watch")
     {
-        input "nightwatchenabled", "boolean", title: "Enable Night Watch", required: true
-        input "awaymode", "mode", title: "Send alert on any motion when home is in this mode", required: false, defaultValue: "Away"
+        input "_nightwatchenabled", "boolean", title: "Enable Night Watch", required: true
+        input "_awaymode", "mode", title: "Send alert on any motion when home is in this mode", required: false, defaultValue: "Away"
     }
 }
 
@@ -68,83 +69,113 @@ def updated()
     initialize()
 }
 
-def configure
-
 def initialize()
 {
-    subscribe(lightsensordevice, "illuminance", on_event)
-    subscribe(motionsensordevice, "motion", on_event)
+    final _luminancetrigger  = _luminancetrigger  ?: 300
+    final _nightlighttime    = _nightlighttime    ?: 10 * 60
+    final _pathtime          = _pathtime          ?: 60
+    final _homemode          = _homemode          ?: "Home"
+    final _nightmode         = _nightmode         ?: "Night"
+    final _awaymode          = _awaymode          ?: "Away"
+
+    log.debug("_luminancetrigger :${_luminancetrigger}")
+    log.debug("_nightlighttime   :${_nightlighttime}")
+    log.debug("_pathtime         :${_pathtime}")
+    log.debug("_homemode         :${_homemode}")
+    log.debug("_nightmode        :${_nightmode}")
+    log.debug("_awaymode         :${_awaymode}")
+
+    subscribe(_lightsensordevice, "illuminance", on_event)
+    subscribe(_motionsensordevice, "motion.active", on_event)
 }
 
 
 def on_event(evt)
 {
-    if (nightlightingenabled && location.mode == homemode)
-        on_home_event()
+    log.debug("-------------------------")
 
-    else if (nightpathenabled && location.mode == nightmode && evt.name == "motion" && evt.value == "active")
-        on_night_event()
+    if (_nightlightsenabled && location.mode == _homemode)
+        on_home_event(evt)
 
-    else if (nightwatchenabled && location.mode == awaymode && evt.name == "motion" && evt.value == "active")
-        on_away_event()
+    else if (_nightpathenabled && location.mode == _nightmode)
+        on_night_event(evt)
+
+    else if (_nightwatchenabled && location.mode == _awaymode)
+        on_away_event(evt)
+
+    log.debug("-------------------------")
 }
 
-def on_home_event()
+def on_home_event(evt)
 {
-    log.debug("Home mode. checking lux value: ${lightsensordevice.currentIlluminance}")
+    log.debug("home event: name: ${evt.name}, value: ${evt.value}")
 
-    if (lightsensordevice.currentIlluminance < (luminancetrigger ?: 300))
-    {
-        log.debug("lux value below luminancetrigger: turning lights on")
-        turn_lights_on()
-    }
-    else
-    {
-        log.debug("lux value above luminancetrigger: turning lights off")
-        turn_lights_off()
-    }
+    def is_dark = _lightsensordevice.currentIlluminance < _luminancetrigger
+
+    if (evt.name == "motion" && evt.value == "active")
+        is_dark ? turn_nightlights_on() : turn_nightlights_off()
+
+    else if (evt.name == "illuminance" && !is_dark)
+        turn_nightlights_off()
 }
 
-def on_night_event()
+def on_night_event(evt)
 {
-    log.debug("Night mode. Lighthing up Night Path")
+    log.debug("night event: name: ${evt.name}, value: ${evt.value}")
+
+    if (evt.name != "motion" || evt.value != "active")
+        return
 
     turn_night_path_lights_on()
-    runIn(pathtime ?: 60, "turn_night_path_lights_off", [overwrite: true])
+
+    unschedule("turn_night_path_lights_off")
+    runIn(_pathtime, "turn_night_path_lights_off")
 }
 
-def on_away_event()
+def on_away_event(evt)
 {
-    log.debug("Away mode. Sending  message")
+    log.debug("away event: name: ${evt.name}, value: ${evt.value}")
+
+    if (evt.name != "motion" || evt.value != "active" )
+        return
 
     sendPush("Alert! Some movement has been detected but nobody's home!")
 }
 
-def turn_lights_on()
+def turn_nightlights_on()
 {
-    _set_lights_state(nightlights, true, 100)
+    log.debug(" - turn lights on")
+    _set_lights_state(_nightlights, true)
+
+    log.debug(" - canceling any secheduled light off.")
+    unschedule("turn_nightlights_off")
+
+    log.debug(" - schedulinng lights off in ${_nightlighttime} seconds")
+    runIn(_nightlighttime, "turn_nightlights_off")
 }
 
-def turn_lights_off()
+def turn_nightlights_off()
 {
-    _set_lights_state(nightlights, false, 100)
+    log.debug(" - turn lights off")
+    _set_lights_state(_nightlights, false)
 }
 
 def turn_night_path_lights_on()
 {
-    _set_lights_state(pathligths, true, 20)
+    log.debug(" - turn path lights on")
+    _set_lights_state(_pathligths, true)
 }
 
 def turn_night_path_lights_off()
 {
-    _set_lights_state(pathligths, false, 100)
+    log.debug(" - turn path lights off")
+    _set_lights_state(_pathligths, false)
 }
 
-def _set_lights_state(targets, state, dim)
+def _set_lights_state(targets, state)
 {
     for (l in targets)
     {
-        l.setLevel(dim)
         if (state)
             l.on()
         else

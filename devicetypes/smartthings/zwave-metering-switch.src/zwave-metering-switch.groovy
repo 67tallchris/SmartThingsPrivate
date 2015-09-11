@@ -137,6 +137,7 @@ def zwaveEvent(physicalgraph.zwave.commands.manufacturerspecificv2.ManufacturerS
 			zwave.meterV2.meterGet(scale: 0).format(),
 			zwave.meterV2.meterGet(scale: 2).format(),
 		]))
+        log.debug("lights configured")
 	} else {
 		result << response(delayBetween([
 			zwave.meterV2.meterGet(scale: 0).format(),
@@ -188,6 +189,11 @@ def refresh() {
 
 def configure() {
 	zwave.manufacturerSpecificV2.manufacturerSpecificGet().format()
+    
+    def cmds = []
+    cmds << zwave.configurationV1.configurationSet(configurationValue: [1], parameterNumber: 81, size: 1).format() // no lights
+    cmds << zwave.configurationV1.configurationGet(parameterNumber: 81).format()
+    delayBetween(cmds, 1000)
 }
 
 def reset() {

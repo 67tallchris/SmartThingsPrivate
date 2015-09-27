@@ -31,7 +31,7 @@ preferences
     section
     {
         input "virtualpresencedevice", "capability.presenceSensor", title: "Select Virtual Presence Device", required: true
-        input "people", "capability.presenceSensor", title: "Select People", multiple: true, required: true
+        input "people", "capability.presenceSensor", title: "Select People", multiple: true, required: false
     }
 }
 

@@ -135,7 +135,7 @@ def configure() {
     cmds << zwave.configurationV1.configurationGet(parameterNumber: 24).format()
         
     // temperature change report threshold (0-255 = 0.1 to 25.5C) default is 1.0 Celcius, setting to .5 Celcius
-    cmds << zwave.configurationV1.configurationSet(configurationValue: [5], parameterNumber: 60, size: 1).format()
+    cmds << zwave.configurationV1.configurationSet(configurationValue: [10], parameterNumber: 60, size: 1).format()
     cmds << zwave.configurationV1.configurationGet(parameterNumber: 60).format() 
     
     cmds << response(zwave.batteryV1.batteryGet())
@@ -358,6 +358,13 @@ def updateZwaveParam(params) {
 def resetParams2StDefaults() {
 	log.debug "Resetting Sensor Parameters to SmartThings Compatible Defaults"
 	def cmds = []
+    
+    cmds << zwave.associationV2.associationSet(groupingIdentifier:3, nodeId:[zwaveHubNodeId]).format()
+    cmds << response(zwave.batteryV1.batteryGet())
+    cmds << response(zwave.versionV1.versionGet().format())
+    cmds << response(zwave.manufacturerSpecificV2.manufacturerSpecificGet().format())
+    cmds << response(zwave.firmwareUpdateMdV2.firmwareMdGet().format())
+    
 	cmds << zwave.configurationV1.configurationSet(configurationValue: [10], parameterNumber: 1, size: 1).format()
     cmds << zwave.configurationV1.configurationSet(configurationValue: [15], parameterNumber: 2, size: 1).format()
     cmds << zwave.configurationV1.configurationSet(configurationValue: [1], parameterNumber: 3, size: 1).format()
@@ -371,12 +378,12 @@ def resetParams2StDefaults() {
     cmds << zwave.configurationV1.configurationSet(configurationValue: [0,30], parameterNumber: 22, size: 2).format()
     cmds << zwave.configurationV1.configurationSet(configurationValue: [4], parameterNumber: 24, size: 1).format()
     cmds << zwave.configurationV1.configurationSet(configurationValue: [0], parameterNumber: 26, size: 1).format()
-    cmds << zwave.configurationV1.configurationSet(configurationValue: [0,40], parameterNumber: 40, size: 2).format() // light master, illuminanc report interval
-    //cmds << zwave.configurationV1.configurationSet(configurationValue: [0,200], parameterNumber: 40, size: 2).format()
-    cmds << zwave.configurationV1.configurationSet(configurationValue: [0,0], parameterNumber: 42, size: 2).format()
-    cmds << zwave.configurationV1.configurationGet(parameterNumber: 40).format()
-    cmds << zwave.configurationV1.configurationSet(configurationValue: [5], parameterNumber: 60, size: 1).format()
-    cmds << zwave.configurationV1.configurationSet(configurationValue: [3,132], parameterNumber: 62, size: 2).format()
+    
+    cmds << zwave.configurationV1.configurationSet(configurationValue: [0, 100], parameterNumber: 40, size: 2).format()
+    cmds << zwave.configurationV1.configurationSet(scaledConfigurationValue: 600, parameterNumber: 42, size: 2).format()
+   
+    cmds << zwave.configurationV1.configurationSet(configurationValue: [10], parameterNumber: 60, size: 1).format()
+    cmds << zwave.configurationV1.configurationSet(scaledConfigurationValue: 900, parameterNumber: 62, size: 2).format()
     cmds << zwave.configurationV1.configurationSet(configurationValue: [0,0], parameterNumber: 64, size: 2).format()
     cmds << zwave.configurationV1.configurationSet(configurationValue: [0,0], parameterNumber: 66, size: 2).format()
     cmds << zwave.configurationV1.configurationSet(configurationValue: [12], parameterNumber: 80, size: 1).format()

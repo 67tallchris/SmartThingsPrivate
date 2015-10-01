@@ -139,11 +139,22 @@ def reset() {
 }
 
 def configure() {
+	log.debug("sending configuration...")
 	delayBetween([
 		zwave.configurationV1.configurationSet(parameterNumber: 101, size: 4, scaledConfigurationValue: 8).format(),   // energy in kWh
 		zwave.configurationV1.configurationSet(parameterNumber: 111, size: 4, scaledConfigurationValue: 300).format(), // every 5 min
 		zwave.configurationV1.configurationSet(parameterNumber: 102, size: 4, scaledConfigurationValue: 0).format(),
 		zwave.configurationV1.configurationSet(parameterNumber: 103, size: 4, scaledConfigurationValue: 0).format(),
-        zwave.configurationV1.configurationSet(parameterNumber: 81, size: 1, scaledConfigurationValue: 1).format()
-	])
+        zwave.configurationV1.configurationSet(parameterNumber: 81, size: 1, scaledConfigurationValue: 1).format(),
+        zwave.configurationV1.configurationSet(parameterNumber: 85, size: 1, scaledConfigurationValue: 3).format(),
+
+		zwave.configurationV1.configurationGet(parameterNumber: 101).format(),
+		zwave.configurationV1.configurationGet(parameterNumber: 111).format(),
+		zwave.configurationV1.configurationGet(parameterNumber: 102).format(),
+		zwave.configurationV1.configurationGet(parameterNumber: 103).format(),
+        zwave.configurationV1.configurationGet(parameterNumber: 81).format(),
+        zwave.configurationV1.configurationGet(parameterNumber: 85).format(),
+        
+        zwave.associationV2.associationGet().format()
+	], 500)
 }

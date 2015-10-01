@@ -248,7 +248,12 @@ def turn_nightpath_lights_off()
 
 def set_lights_state(targets, state)
 {
-	targets.collect { l -> state ? l.on() : l.off() }
+	targets.collect { l -> 
+    	if (state && l.currentValue("switch") == "off")
+    		l.on() 
+        else if (!state && l.currentValue("switch") == "on")
+			l.off()
+       }
 }
 
 def is_dark()

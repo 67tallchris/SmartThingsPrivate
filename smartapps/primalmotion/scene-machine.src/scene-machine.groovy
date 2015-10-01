@@ -94,6 +94,7 @@ private setScene()
     
 	for(myData in state.lastSwitchData)
     {
+    	def dimmerValue = myData.dimmerValue
     	def switchName  = myData.switchName
     	def switchType  = myData.switchType
     	def switchState = myData.switchState

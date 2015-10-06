@@ -104,7 +104,7 @@ def preferencesNightPath()
         {
             input "nightmode", "mode", title: "When home is in mode", required: false,  defaultValue: "Night"
             input "pathligths", "capability.switch", title: "On motion, turn these lights on", multiple: true, required: false
-            input "pathtime", "number", title: "Turn them off after (seconds)", required: false, defaultValue: 60
+            input "pathtime", "number", title: "Turn off after no motion detected for (min)", required: false, defaultValue: 1
         }
     }
 }
@@ -183,7 +183,7 @@ def on_night_event(evt)
     turn_nightpath_lights_on()
 
     unschedule("turn_nightpath_lights_off")
-    runIn(settings.pathtime, "turn_nightpath_lights_off")
+    runIn(settings.pathtime * 60, "turn_nightpath_lights_off")
 }
 
 
@@ -248,6 +248,8 @@ def turn_nightpath_lights_off()
 
 def set_lights_state(targets, state)
 {
+//	targets.collect { l -> state ? l.on() : l.off() }
+    
 	targets.collect { l -> 
     	if (state && l.currentValue("switch") == "off")
     		l.on() 

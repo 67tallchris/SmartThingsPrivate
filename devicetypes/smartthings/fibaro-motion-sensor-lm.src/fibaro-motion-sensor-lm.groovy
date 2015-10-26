@@ -291,8 +291,34 @@ def zwaveEvent(physicalgraph.zwave.commands.manufacturerspecificv2.ManufacturerS
 
 //used to add "test" button for simulation of user changes to parameters
 def test() {
-	def params = [paramNumber:80,value:10,size:1]
-	updateZwaveParam(params)
+	def cmds = []
+    
+        // CUSTOM TONIO'S CONFIG
+    // tamper style: default 4
+	cmds << zwave.configurationV1.configurationSet(scaledConfigurationValue: 4, parameterNumber: 24, size: 1).format() 
+    cmds << zwave.configurationV1.configurationGet(parameterNumber: 24).format()
+    
+    // light lux thresold: default 200
+    cmds << zwave.configurationV1.configurationSet(scaledConfigurationValue: 200, parameterNumber: 40, size: 2).format() 
+    cmds << zwave.configurationV1.configurationGet(parameterNumber: 40).format()
+    
+    // lux report interval: normal default 0 , light master 900
+    cmds << zwave.configurationV1.configurationSet(scaledConfigurationValue: 900, parameterNumber: 42, size: 2).format() 
+    cmds << zwave.configurationV1.configurationGet(parameterNumber: 42).format()
+
+	// temp thresold:
+    cmds << zwave.configurationV1.configurationSet(scaledConfigurationValue: 0, parameterNumber: 60, size: 1).format() 
+    cmds << zwave.configurationV1.configurationGet(parameterNumber: 60).format()
+    
+    // temp report interval
+    cmds << zwave.configurationV1.configurationSet(scaledConfigurationValue: 0, parameterNumber: 62, size: 2).format() 
+    cmds << zwave.configurationV1.configurationGet(parameterNumber: 62).format()
+    
+    //led style 
+    cmds << zwave.configurationV1.configurationSet(scaledConfigurationValue: 0, parameterNumber: 80, size: 1).format() 
+    cmds << zwave.configurationV1.configurationGet(parameterNumber: 80).format()
+    
+	delayBetween(cmds, 500)
 }
 
  /**
@@ -364,32 +390,7 @@ def resetParams2StDefaults() {
     cmds << zwave.configurationV1.configurationSet(configurationValue: [18], parameterNumber: 86, size: 1).format()
     cmds << zwave.configurationV1.configurationSet(configurationValue: [28], parameterNumber: 87, size: 1).format()
     cmds << zwave.configurationV1.configurationSet(configurationValue: [1], parameterNumber: 89, size: 1).format()
-    
-    // CUSTOM TONIO'S CONFIG
-    // tamper style: default 4
-    // cmds << zwave.configurationV1.configurationSet(scaledConfigurationValue: 4, parameterNumber: 24, size: 1).format() 
-    // cmds << zwave.configurationV1.configurationGet(parameterNumber: 24).format()
-    
-    // light lux thresold: default 200
-    // cmds << zwave.configurationV1.configurationSet(scaledConfigurationValue: 200, parameterNumber: 40, size: 2).format() 
-    // cmds << zwave.configurationV1.configurationGet(parameterNumber: 40).format()
-    
-    // lux report interval: normal default 0 , light master 900
-    // cmds << zwave.configurationV1.configurationSet(scaledConfigurationValue: 900, parameterNumber: 42, size: 2).format() 
-    // cmds << zwave.configurationV1.configurationGet(parameterNumber: 42).format()
-
-	// temp thresold:
-    // cmds << zwave.configurationV1.configurationSet(scaledConfigurationValue: 0, parameterNumber: 60, size: 1).format() 
-    // cmds << zwave.configurationV1.configurationGet(parameterNumber: 60).format()
-    
-    // temp report interval
-    // cmds << zwave.configurationV1.configurationSet(scaledConfigurationValue: 0, parameterNumber: 62, size: 2).format() 
-    // cmds << zwave.configurationV1.configurationGet(parameterNumber: 62).format()
-    
-    //led style 
-    // cmds << zwave.configurationV1.configurationSet(scaledConfigurationValue: 0, parameterNumber: 80, size: 1).format() 
-    // cmds << zwave.configurationV1.configurationGet(parameterNumber: 80).format()
-    
+   
     delayBetween(cmds, 500)
 }
 

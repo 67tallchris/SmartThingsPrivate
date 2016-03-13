@@ -106,6 +106,7 @@ def updated() {
 
 def initialize() {
 	subscribe cube, "threeAxis", positionHandler
+    // subscribe cube, "acceleration", positionHandler
     subscribe cube, "contact", contactHandler
 }
 
@@ -115,14 +116,14 @@ def initialize() {
  ******************/
 def positionHandler(evt) {
 
-	def sceneId = getOrientation(evt.xyzValue)
+	final sceneId = getOrientation(cube.currentXyzValue)
 	log.trace "orientation: $sceneId"
-
-	if (sceneId != state.lastActiveSceneId) {
-		runHomeAction(sceneId)
-        runSwitchOff(scenedId)
-        runSwitchOn(scenedId)
-	}
+	
+    if (sceneId != state.lastActiveSceneId) {
+	    runSwitchOff(sceneId)
+    	runSwitchOn(sceneId)
+        runHomeAction(sceneId)
+    }
 	else {
 		log.trace "No status change"
 	}
@@ -135,9 +136,9 @@ def contactHandler(evt) {
     log.trace "contact ${evt.value} : $sceneId"
     
 	if (sceneId != state.lastActiveSceneId) {
-		runHomeAction(sceneId)
-        runSwitchOff(scenedId)
-        runSwitchOn(scenedId)
+        runSwitchOff(sceneId)
+        runSwitchOn(sceneId)
+        runHomeAction(sceneId)
 	}
 	else {
 		log.trace "No status change"

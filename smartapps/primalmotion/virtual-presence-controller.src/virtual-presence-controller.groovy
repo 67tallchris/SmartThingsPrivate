@@ -32,6 +32,7 @@ preferences
     {
         input "virtualpresencedevice", "capability.presenceSensor", title: "Select Virtual Presence Device", required: true
         input "people", "capability.presenceSensor", title: "Select People", multiple: true, required: false
+        input "trigger", "capability.switch", title: "Select Button", multiple: false, required: false
     }
 }
 
@@ -49,6 +50,12 @@ def updated()
 def initialize()
 {
     subscribe(people, "presence", presence)
+    subscribe(trigger, "switch", on_switch)
+}
+
+def on_switch(evt)
+{
+	set_virtual_presence_state(trigger.currentSwitch == "on")
 }
 
 def presence(evt)
